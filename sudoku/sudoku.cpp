@@ -5,29 +5,32 @@
 typedef uint8_t byte;
 typedef uint16_t row_flag;
 
-typedef struct board_struct {
+struct board{
 	byte filled;
 	byte** vals;
 	row_flag* r_flag;
 	row_flag* c_flag;
 	row_flag* b_flag;
-} board;
-
+};
 
 void print_binary(row_flag number, int num_digits) {
+	
 	int digit;
-	for (digit = num_digits - 1; digit >= 0; digit--) {
+	for (digit = num_digits - 1; digit >= 0; digit--) 
+	{
 		printf("%c", number & (1 << digit) ? '1' : '0');
 	}
 }
 
-//just fills in the row flags with available info
+//fills in the row flags with available info
 void static fill_row_flags(board* b) {
+	
 	for (byte i = 0; i < 9; i++)
 	{
 		for (byte j = 0; j < 9; j++)
 		{
-			if (b->vals[i][j] != 0) {
+			if (b->vals[i][j] != 0)
+			{
 				row_flag test_bit = 0x1 << (b->vals[i][j]-1);
 				
 				b->r_flag[i] |= test_bit;
@@ -45,7 +48,6 @@ void static fill_row_flags(board* b) {
 
 //adds val and updates row_flags
 void static update_board(board* b, byte i, byte j, byte val) {
-	
 
 	//utility
 	row_flag test_bit = 0x1 << (val - 1);
@@ -59,7 +61,6 @@ void static update_board(board* b, byte i, byte j, byte val) {
 	b->b_flag[b_index] |= test_bit;
 
 	b->filled++;
-
 }
 
 //revert changes made by update_board to val and row_flags
@@ -81,6 +82,7 @@ void static revert_board(board* b, byte i, byte j) {
 
 //check if the board is valid and find the best place to guess next
 byte static find_and_check(board* b, byte* p_i, byte* p_j) {
+	
 	//check if that ^ didnt invalidate previous row_flags and also find the next empty i,j with most row flags while we are at it
 	byte g_i = 0;
 	byte g_j = 0;
@@ -90,7 +92,8 @@ byte static find_and_check(board* b, byte* p_i, byte* p_j) {
 		for (byte n = 0; n < 9; n++)
 		{
 			//only check if val is empty
-			if (b->vals[m][n] == 0) {
+			if (b->vals[m][n] == 0) 
+			{
 				//get combined flag for vals[m][n]
 				byte tmp_b_index = (m / 3) * 3 + (n / 3);
 				row_flag tmp_comb = b->r_flag[m] | b->c_flag[n] | b->b_flag[tmp_b_index];
@@ -98,7 +101,8 @@ byte static find_and_check(board* b, byte* p_i, byte* p_j) {
 				//if bit count > 8 there are no valid entries thus this is board is invalid
 				if (count > 8) {  return 0; }
 				//find [m][n] with least options to make search faster
-				else if (count > g_count) {
+				else if (count > g_count) 
+				{
 					g_count = count;
 					g_i = m;
 					g_j = n;
@@ -117,21 +121,15 @@ byte static find_and_check(board* b, byte* p_i, byte* p_j) {
 //gets the next valid guess for a square using the row_flags and the previous guess
 //if there is no valid guess it returns 10
 byte static get_guess(board* b, byte i, byte j, byte prev_guess) {
+	
 	byte b_index = (i / 3) * 3 + (j / 3);
 	row_flag combined = b->r_flag[i] | b->c_flag[j] | b->b_flag[b_index];
-	//printf("row flags: %x %x %x \n", b->r_flag[i], b->c_flag[j], b->b_flag[b_index]);
-	//printf("combined row flag: %x\n", combined);
 	
 	//reverse and mask
 	combined = (~combined & 0x01ff);
-
-	//printf("inverse masked row flag: %x\n", combined);
 	
 	for (byte i = 1; i < 10; i++)
 	{
-		//print_binary(combined, 16);
-		//printf(" masked inverse masked: %x\n", combined & 0x0001);
-		//printf("BOOLS %d   %d", i, prev_index);
 		if (i > prev_guess && combined & 0x0001) { return i; }
 		combined = combined >> 1;
 	}
@@ -139,6 +137,7 @@ byte static get_guess(board* b, byte i, byte j, byte prev_guess) {
 }
 
 void static print_board(board* b) {
+	
 	for (size_t i = 0; i < 9; i++)
 	{
 		for (size_t j = 0; j < 9; j++)
@@ -151,6 +150,7 @@ void static print_board(board* b) {
 }
 
 void static print_row_flags(board* b) {
+	
 	for (size_t i = 0; i < 9; i++){printf("%x ", b->r_flag[i]);}
 	printf("\n");
 	for (size_t i = 0; i < 9; i++) { printf("%x ", b->c_flag[i]); }
@@ -159,7 +159,9 @@ void static print_row_flags(board* b) {
 	printf("\n\n");
 }
 
+//please forgive me for all these callocs, I didnt know they are harmful when writing this.
 void static copy_board(board* src, board* dst) {
+	
 	dst->vals = (byte**)calloc(9, sizeof(byte*));
 	for (size_t i = 0; i < 9; i++)
 	{
@@ -177,7 +179,9 @@ void static copy_board(board* src, board* dst) {
 	memcpy(dst->b_flag, src->b_flag, sizeof(row_flag) * 9);
 }
 
+//again, pease forgive the callocs
 void static initialize_board(board* b) {
+
 	b->vals = (byte**)calloc(9, sizeof(byte*));
 	for (size_t i = 0; i < 9; i++)
 	{
@@ -190,6 +194,7 @@ void static initialize_board(board* b) {
 }
 
 void static delete_board(board* b) {
+	
 	for (size_t i = 0; i < 9; i++)
 	{
 		free(b->vals[i]);
@@ -201,12 +206,11 @@ void static delete_board(board* b) {
 }
 
 
-int main()
-{
+int main(){
+	
 	board b;
 	board* p_b = &b;
 	
-
 	initialize_board(p_b);
 	//enter starter vals
 	
@@ -247,7 +251,6 @@ int main()
 	//fill row flags
 	fill_row_flags(p_b);
 	//first guess must be starter val n
-	
 
 	print_board(p_b);
 
@@ -256,8 +259,6 @@ int main()
 	byte j_arr[90];
 	byte* guess_arr = (byte*)calloc(sizeof(byte),90);
 	byte index = 0;
-
-	
 	
 	while (p_b->filled < 81)
 	{
@@ -267,20 +268,19 @@ int main()
 			guess_arr[index] = get_guess(p_b, i_arr[index], j_arr[index], 0);
 		}
 		//board is not valid, revert changes until we hit a space were we can guess something
-		else {
-			do {
+		else 
+		{
+			do 
+			{
 				if (index == 0) { printf("NO SOLUTION\n"); return 0; }
 				index--;
 				revert_board(p_b, i_arr[index], j_arr[index]);
 				guess_arr[index] = get_guess(p_b, i_arr[index], j_arr[index], guess_arr[index]);
 
 			} while (guess_arr[index] == 10);
-			//printf("BACKTRAKING\n");
 		}
-		
 		update_board(p_b, i_arr[index], j_arr[index], guess_arr[index]);
 		index++;
-
 	}
 	print_board(p_b);
 }
